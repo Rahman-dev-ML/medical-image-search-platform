@@ -147,3 +147,17 @@ class XRay(models.Model):
         if self.image:
             return os.path.basename(self.image.name)
         return None
+
+
+# Conditional Elasticsearch signal handling
+import os
+if os.environ.get('SKIP_ELASTICSEARCH', 'False').lower() != 'true':
+    try:
+        from django_elasticsearch_dsl import signals
+        from .documents import XRayDocument
+        
+        # Connect signals only if Elasticsearch is available
+        signals.RealTimeSignalProcessor.setup()
+    except ImportError:
+        # Elasticsearch not available, skip signals
+        pass

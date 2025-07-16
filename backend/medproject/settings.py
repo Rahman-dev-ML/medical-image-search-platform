@@ -44,8 +44,11 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'xray_search',
-    'django_elasticsearch_dsl',
 ]
+
+# Only add Elasticsearch if not skipping
+if not config('SKIP_ELASTICSEARCH', default=False, cast=bool):
+    INSTALLED_APPS.append('django_elasticsearch_dsl')
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

@@ -3,10 +3,16 @@ djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-filter==23.3
 Pillow==10.1.0
+<<<<<<< HEAD
+=======
+django-elasticsearch-dsl==7.3
+elasticsearch==7.17.9
+elasticsearch-dsl==7.4.1
+>>>>>>> d5b5e0ed630728411714577f308de15d8e44fe70
 requests==2.31.0
 python-dateutil==2.8.2
 gunicorn==21.2.0
 whitenoise==6.6.0
 psycopg2-binary==2.9.9
 dj-database-url==2.1.0
-python-decouple==3.8 
+python-decouple==3.8
