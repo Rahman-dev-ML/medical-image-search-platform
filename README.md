@@ -4,9 +4,9 @@ A full-stack application for medical professionals to search and manage X-ray sc
 
 ## 🚀 Live Demo
 
-- **Frontend**: [Coming Soon - Will be deployed on Vercel]
-- **Backend API**: [Coming Soon - Will be deployed on Render]
-- **Admin Panel**: [Backend URL]/admin
+- **Frontend**: https://medical-image-frontend-187z.onrender.com/
+- **Backend API**: https://medical-image-search-platform.onrender.com/
+- **Admin Panel**: https://medical-image-search-platform.onrender.com/admin/login/?next=/admin/
 
 ## ✨ Features
 
