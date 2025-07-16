@@ -180,9 +180,20 @@ class Command(BaseCommand):
             # Generate patient ID
             patient_id = f"P{str(random.randint(10000, 99999)).zfill(5)}"
             
-            # Random body part and corresponding diagnosis
-            body_part = random.choice(body_parts)
-            diagnosis = random.choice(diagnoses_by_body_part[body_part])
+            # Select body part with available custom images
+            available_body_parts = list(self.medical_images.keys())
+            body_part = random.choice(available_body_parts)
+            
+            # Get available images for this body part
+            available_images = self.medical_images[body_part]
+            selected_image = random.choice(available_images)
+            
+            # Use the diagnosis from the selected image
+            diagnosis = selected_image['diagnosis']
+            
+            # Fallback if diagnosis not in our templates
+            if diagnosis not in diagnoses_by_body_part.get(body_part, []):
+                diagnosis = random.choice(diagnoses_by_body_part.get(body_part, ['Normal']))
             
             # Generate description
             if diagnosis in descriptions_templates:
@@ -218,22 +229,39 @@ class Command(BaseCommand):
                 tags=tags
             )
             
-            # Use real image or create placeholder
-            image_name = f"{patient_id}_{body_part.lower()}_{i+1}.png"
-            real_image_path = self.get_real_image_for_body_part(body_part)
+            # Use custom medical image matching the diagnosis
+            image_name = f"{patient_id}_{body_part.lower()}_{diagnosis.lower().replace(' ', '_')}.png"
             
-            if real_image_path and real_image_path.exists():
-                # Use real downloaded image
-                with open(real_image_path, 'rb') as f:
-                    xray.image.save(image_name, File(f), save=True)
-            else:
-                # Fallback to generated image
-                image_content = self.create_fake_xray_image(body_part)
+            # Try to download the specific image for this record
+            try:
+                response = requests.get(selected_image['url'], timeout=10)
+                response.raise_for_status()
+                
+                # Save the downloaded image
+                image_content = response.content
                 xray.image.save(
                     image_name,
                     ContentFile(image_content),
                     save=True
                 )
+                print(f"✓ Used custom image for {body_part} - {diagnosis}")
+                
+            except Exception as e:
+                print(f"✗ Failed to download {selected_image['url']}: {e}")
+                # Fallback to local image or generated image
+                real_image_path = self.get_real_image_for_body_part(body_part)
+                
+                if real_image_path and real_image_path.exists():
+                    with open(real_image_path, 'rb') as f:
+                        xray.image.save(image_name, File(f), save=True)
+                else:
+                    # Final fallback to generated image
+                    image_content = self.create_fake_xray_image(body_part)
+                    xray.image.save(
+                        image_name,
+                        ContentFile(image_content),
+                        save=True
+                    )
             
             created_records += 1
             
@@ -357,74 +385,167 @@ class Command(BaseCommand):
         return img_bytes.getvalue()
     
     def download_real_images(self):
-        """Download real X-ray images from public datasets"""
-        sample_dir = Path('sample_xray_images')
-        sample_dir.mkdir(exist_ok=True)
+        """Download real X-ray images for seeding"""
         
-        # Only download if directory is empty
-        if list(sample_dir.glob('*.jpg')) or list(sample_dir.glob('*.jpeg')):
-            return  # Images already downloaded
-        
-        # Real X-ray images from medical sources
-        xray_images = {
-            # Chest X-rays
-            'chest_normal_1.jpg': 'https://www.kenhub.com/thumbor/HY-FumDTVdDoBWdeJI8VFIfR2hc=/fit-in/800x1600/filters:watermark(/images/logo_url.png,-10,-10,0):background_color(FFFFFF):format(jpeg)/images/library/10855/E4OFggoL2vooAU0frCUSZA_Costophrenic_angle.png',
-            'chest_pneumonia_1.jpg': 'https://ars.els-cdn.com/content/image/1-s2.0-S0263931909001811-gr3.jpg',
-            'chest_tb_1.jpg': 'https://radiologyassistant.nl/assets/_1-scarring-2.jpg',
-            
-            # Knee X-rays
-            'knee_normal_1.jpg': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4QSuaC7KGsPvbb2BJPsQAwqn765C6ABuglg&s',
-            'knee_arthritis_1.jpg': 'https://prod-images-static.radiopaedia.org/images/53810539/IMAGE_021-001_big_gallery.jpeg',
-            'knee_fracture_1.jpg': 'https://orthoinfo.aaos.org/globalassets/figures/a00523f04.jpg',
-            
-            # Spine X-rays
-            'spine_normal_1.jpg': 'https://lh4.googleusercontent.com/proxy/6XOPIxIAloEn2yT6aDWboZsp81l-eTcShhLnFVQpF7LnXZH1ULcrCpHa7N9WMFk_6nPJ8_SfQ3V7IpPGFRhUWYFFtInqgwwa6bA4bWo',
-            'spine_herniated_1.jpg': 'https://upload.wikimedia.org/wikipedia/commons/8/84/Hernie_discale_L4_L5.png',
-            
-            # Hip X-rays
-            'hip_normal_1.jpg': 'https://static.wixstatic.com/media/ebdd4d_df3141d0c1394a068d5e13c7d3d73ff2~mv2.jpg/v1/fill/w_600,h_401,al_c,lg_1,q_80/ebdd4d_df3141d0c1394a068d5e13c7d3d73ff2~mv2.jpg',
-            'hip_fracture_1.jpg': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/X-ray_of_mildly_compressed_hip_fracture%2C_annotated.jpg/330px-X-ray_of_mildly_compressed_hip_fracture%2C_annotated.jpg',
-            
-            # Shoulder X-rays
-            'shoulder_normal_1.jpg': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSkp5GuTggDt0pCKq9SGcNNvTkP4SAggRlqvw&s',
-            'shoulder_fracture_1.jpg': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMq_1g9dQtOk6P90W1yL0YVMt91amEuz530g&s',
-            
-            # Ankle X-rays
-            'ankle_normal_1.jpg': 'https://my.clevelandclinic.org/-/scassets/images/org/health/articles/23500-foot-x-ray',
-            'ankle_fracture_1.jpg': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg7QxPZOfZA09dnK5Icqq-bbZlT5PNaCnWtw&s',
-            
-            # Wrist X-rays
-            'wrist_normal_1.jpg': 'https://i0.wp.com/www.aliem.com/wp-content/uploads/2019/12/Normal-wrist-AP.jpg?fit=1023%2C1024&ssl=1',
-            'wrist_fracture_1.jpg': 'https://i1.wp.com/www.aliem.com/wp-content/uploads/2019/12/Adult-Wrist.png?fit=619%2C650&ssl=1',
-            
-            # Elbow X-rays
-            'elbow_normal_1.jpg': 'https://prod-images-static.radiopaedia.org/images/21172510/aaa867f71f0fedbd9cdadd08e62a17_big_gallery.jpeg',
-            'elbow_fracture_1.jpg': 'https://www.nyp.org/graphics/emergency/reading-images/radialheadfracture.jpg',
-            
-            # Pelvis X-rays
-            'pelvis_normal_1.jpg': 'https://my.clevelandclinic.org/-/scassets/images/org/health/articles/23519-pelvis-x-ray',
-            'pelvis_fracture_1.jpg': 'https://media.post.rvohealth.io/wp-content/uploads/2020/08/pelvis-x-ray_thumb.jpg',
-            
-            # Abdomen X-rays
-            'abdomen_normal_1.jpg': 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Medical_X-Ray_imaging_ALP02_nevit.jpg',
-            'abdomen_obstruction_1.jpg': 'https://almostadoctor.co.uk/wp-content/uploads/2017/05/Toxic_Megacolon.jpg',
+        # Custom medical X-ray images organized by body part and condition
+        medical_images = {
+            'Chest': [
+                {
+                    'url': 'https://www.kenhub.com/thumbor/HY-FumDTVdDoBWdeJI8VFIfR2hc=/fit-in/800x1600/filters:watermark(/images/logo_url.png,-10,-10,0):background_color(FFFFFF):format(jpeg)/images/library/10855/E4OFggoL2vooAU0frCUSZA_Costophrenic_angle.png',
+                    'filename': 'chest_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://ars.els-cdn.com/content/image/1-s2.0-S0263931909001811-gr3.jpg',
+                    'filename': 'chest_pneumonia_1.jpg',
+                    'diagnosis': 'Pneumonia'
+                },
+                {
+                    'url': 'https://radiologyassistant.nl/assets/_1-scarring-2.jpg',
+                    'filename': 'chest_tb_1.jpg',
+                    'diagnosis': 'Tuberculosis'
+                }
+            ],
+            'Knee': [
+                {
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4QSuaC7KGsPvbb2BJPsQAwqn765C6ABuglg&s',
+                    'filename': 'knee_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://prod-images-static.radiopaedia.org/images/53810539/IMAGE_021-001_big_gallery.jpeg',
+                    'filename': 'knee_arthritis_1.jpg',
+                    'diagnosis': 'Osteoarthritis'
+                },
+                {
+                    'url': 'https://orthoinfo.aaos.org/globalassets/figures/a00523f04.jpg',
+                    'filename': 'knee_fracture_1.jpg',
+                    'diagnosis': 'Fracture'
+                }
+            ],
+            'Spine': [
+                {
+                    'url': 'https://lh4.googleusercontent.com/proxy/6XOPIxIAloEn2yT6aDWboZsp81l-eTcShhLnFVQpF7LnXZH1ULcrCpHa7N9WMFk_6nPJ8_SfQ3V7IpPGFRhUWYFFtInqgwwa6bA4bWo',
+                    'filename': 'spine_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://upload.wikimedia.org/wikipedia/commons/8/84/Hernie_discale_L4_L5.png',
+                    'filename': 'spine_herniated_1.jpg',
+                    'diagnosis': 'Herniated Disc'
+                }
+            ],
+            'Hip': [
+                {
+                    'url': 'https://static.wixstatic.com/media/ebdd4d_df3141d0c1394a068d5e13c7d3d73ff2~mv2.jpg/v1/fill/w_600,h_401,al_c,lg_1,q_80/ebdd4d_df3141d0c1394a068d5e13c7d3d73ff2~mv2.jpg',
+                    'filename': 'hip_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/X-ray_of_mildly_compressed_hip_fracture%2C_annotated.jpg/330px-X-ray_of_mildly_compressed_hip_fracture%2C_annotated.jpg',
+                    'filename': 'hip_fracture_1.jpg',
+                    'diagnosis': 'Fracture'
+                }
+            ],
+            'Shoulder': [
+                {
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSkp5GuTggDt0pCKq9SGcNNvTkP4SAggRlqvw&s',
+                    'filename': 'shoulder_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMq_1g9dQtOk6P90W1yL0YVMt91amEuz530g&s',
+                    'filename': 'shoulder_fracture_1.jpg',
+                    'diagnosis': 'Fracture'
+                }
+            ],
+            'Ankle': [
+                {
+                    'url': 'https://my.clevelandclinic.org/-/scassets/images/org/health/articles/23500-foot-x-ray',
+                    'filename': 'ankle_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg7QxPZOfZA09dnK5Icqq-bbZlT5PNaCnWtw&s',
+                    'filename': 'ankle_fracture_1.jpg',
+                    'diagnosis': 'Fracture'
+                }
+            ],
+            'Wrist': [
+                {
+                    'url': 'https://i0.wp.com/www.aliem.com/wp-content/uploads/2019/12/Normal-wrist-AP.jpg?fit=1023%2C1024&ssl=1',
+                    'filename': 'wrist_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://i1.wp.com/www.aliem.com/wp-content/uploads/2019/12/Adult-Wrist.png?fit=619%2C650&ssl=1',
+                    'filename': 'wrist_fracture_1.jpg',
+                    'diagnosis': 'Fracture'
+                }
+            ],
+            'Elbow': [
+                {
+                    'url': 'https://prod-images-static.radiopaedia.org/images/21172510/aaa867f71f0fedbd9cdadd08e62a17_big_gallery.jpeg',
+                    'filename': 'elbow_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://www.nyp.org/graphics/emergency/reading-images/radialheadfracture.jpg',
+                    'filename': 'elbow_fracture_1.jpg',
+                    'diagnosis': 'Fracture'
+                }
+            ],
+            'Pelvis': [
+                {
+                    'url': 'https://my.clevelandclinic.org/-/scassets/images/org/health/articles/23519-pelvis-x-ray',
+                    'filename': 'pelvis_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://media.post.rvohealth.io/wp-content/uploads/2020/08/pelvis-x-ray_thumb.jpg',
+                    'filename': 'pelvis_abnormal_1.jpg',
+                    'diagnosis': 'Abnormal'
+                }
+            ],
+            'Abdomen': [
+                {
+                    'url': 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Medical_X-Ray_imaging_ALP02_nevit.jpg',
+                    'filename': 'abdomen_normal_1.jpg',
+                    'diagnosis': 'Normal'
+                },
+                {
+                    'url': 'https://almostadoctor.co.uk/wp-content/uploads/2017/05/Toxic_Megacolon.jpg',
+                    'filename': 'abdomen_abnormal_1.jpg',
+                    'diagnosis': 'Toxic Megacolon'
+                }
+            ]
         }
         
-        self.stdout.write('Downloading real X-ray images...')
+        # Store the medical images for use in seeding
+        self.medical_images = medical_images
         
-        for filename, url in xray_images.items():
-            try:
-                response = requests.get(url, timeout=30)
-                response.raise_for_status()
-                
-                file_path = sample_dir / filename
-                with open(file_path, 'wb') as f:
-                    f.write(response.content)
-                
-                self.stdout.write(f'[SUCCESS] Downloaded {filename}')
-                
-            except Exception as e:
-                self.stdout.write(f'[ERROR] Failed to download {filename}: {e}')
+        sample_images_dir = Path(__file__).parent.parent.parent.parent / 'sample_xray_images'
+        sample_images_dir.mkdir(exist_ok=True)
+        
+        print(f"Custom medical images organized by body part and diagnosis")
+        print(f"Total images available: {sum(len(images) for images in medical_images.values())}")
+        
+        # Download a few sample images for local storage
+        for body_part, images in medical_images.items():
+            for image_data in images[:1]:  # Download first image of each body part
+                image_path = sample_images_dir / image_data['filename']
+                if not image_path.exists():
+                    try:
+                        response = requests.get(image_data['url'], timeout=10)
+                        response.raise_for_status()
+                        
+                        with open(image_path, 'wb') as f:
+                            f.write(response.content)
+                        print(f"✓ Downloaded {image_data['filename']}")
+                    except Exception as e:
+                        print(f"✗ Failed to download {image_data['filename']}: {e}")
+        
+        return True
     
     def get_real_image_for_body_part(self, body_part):
         """Get a real X-ray image path for the given body part"""

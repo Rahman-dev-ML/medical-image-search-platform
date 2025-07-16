@@ -219,7 +219,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Upload />
               Upload X-ray
             </NavLink>
-            <AdminLink href="http://localhost:8000/admin/" target="_blank" rel="noopener noreferrer">
+            <AdminLink href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/admin/`} target="_blank" rel="noopener noreferrer">
               <Shield />
               Admin Panel
             </AdminLink>
