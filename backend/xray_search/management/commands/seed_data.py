@@ -388,134 +388,134 @@ class Command(BaseCommand):
     def download_real_images(self):
         """Download real X-ray images for seeding"""
         
-        # Curated medical X-ray images with verified working URLs
+        # Original custom medical X-ray images as specified by user
         medical_images = {
             'Chest': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop',
+                    'url': 'https://www.kenhub.com/thumbor/HY-FumDTVdDoBWdeJI8VFIfR2hc=/fit-in/800x1600/filters:watermark(/images/logo_url.png,-10,-10,0):background_color(FFFFFF):format(jpeg)/images/library/10855/E4OFggoL2vooAU0frCUSZA_Costophrenic_angle.png',
                     'filename': 'chest_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=500&h=500&fit=crop',
+                    'url': 'https://ars.els-cdn.com/content/image/1-s2.0-S0263931909001811-gr3.jpg',
                     'filename': 'chest_pneumonia_1.jpg',
                     'diagnosis': 'Pneumonia'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&h=500&fit=crop',
+                    'url': 'https://radiologyassistant.nl/assets/_1-scarring-2.jpg',
                     'filename': 'chest_tb_1.jpg',
                     'diagnosis': 'Tuberculosis'
                 }
             ],
             'Knee': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500&h=500&fit=crop',
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4QSuaC7KGsPvbb2BJPsQAwqn765C6ABuglg&s',
                     'filename': 'knee_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=500&h=500&fit=crop',
+                    'url': 'https://prod-images-static.radiopaedia.org/images/53810539/IMAGE_021-001_big_gallery.jpeg',
                     'filename': 'knee_arthritis_1.jpg',
                     'diagnosis': 'Osteoarthritis'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop',
+                    'url': 'https://orthoinfo.aaos.org/globalassets/figures/a00523f04.jpg',
                     'filename': 'knee_fracture_1.jpg',
                     'diagnosis': 'Fracture'
                 }
             ],
             'Spine': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&h=500&fit=crop',
+                    'url': 'https://lh4.googleusercontent.com/proxy/6XOPIxIAloEn2yT6aDWboZsp81l-eTcShhLnFVQpF7LnXZH1ULcrCpHa7N9WMFk_6nPJ8_SfQ3V7IpPGFRhUWYFFtInqgwwa6bA4bWo',
                     'filename': 'spine_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500&h=500&fit=crop',
+                    'url': 'https://upload.wikimedia.org/wikipedia/commons/8/84/Hernie_discale_L4_L5.png',
                     'filename': 'spine_herniated_1.jpg',
                     'diagnosis': 'Herniated Disc'
                 }
             ],
             'Hip': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=500&h=500&fit=crop',
+                    'url': 'https://static.wixstatic.com/media/ebdd4d_df3141d0c1394a068d5e13c7d3d73ff2~mv2.jpg/v1/fill/w_600,h_401,al_c,lg_1,q_80/ebdd4d_df3141d0c1394a068d5e13c7d3d73ff2~mv2.jpg',
                     'filename': 'hip_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop',
+                    'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/X-ray_of_mildly_compressed_hip_fracture%2C_annotated.jpg/330px-X-ray_of_mildly_compressed_hip_fracture%2C_annotated.jpg',
                     'filename': 'hip_fracture_1.jpg',
                     'diagnosis': 'Fracture'
                 }
             ],
             'Shoulder': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&h=500&fit=crop',
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSkp5GuTggDt0pCKq9SGcNNvTkP4SAggRlqvw&s',
                     'filename': 'shoulder_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500&h=500&fit=crop',
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMq_1g9dQtOk6P90W1yL0YVMt91amEuz530g&s',
                     'filename': 'shoulder_fracture_1.jpg',
                     'diagnosis': 'Fracture'
                 }
             ],
             'Ankle': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=500&h=500&fit=crop',
+                    'url': 'https://my.clevelandclinic.org/-/scassets/images/org/health/articles/23500-foot-x-ray',
                     'filename': 'ankle_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop',
+                    'url': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg7QxPZOfZA09dnK5Icqq-bbZlT5PNaCnWtw&s',
                     'filename': 'ankle_fracture_1.jpg',
                     'diagnosis': 'Fracture'
                 }
             ],
             'Wrist': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&h=500&fit=crop',
+                    'url': 'https://i0.wp.com/www.aliem.com/wp-content/uploads/2019/12/Normal-wrist-AP.jpg?fit=1023%2C1024&ssl=1',
                     'filename': 'wrist_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500&h=500&fit=crop',
+                    'url': 'https://i1.wp.com/www.aliem.com/wp-content/uploads/2019/12/Adult-Wrist.png?fit=619%2C650&ssl=1',
                     'filename': 'wrist_fracture_1.jpg',
                     'diagnosis': 'Fracture'
                 }
             ],
             'Elbow': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=500&h=500&fit=crop',
+                    'url': 'https://prod-images-static.radiopaedia.org/images/21172510/aaa867f71f0fedbd9cdadd08e62a17_big_gallery.jpeg',
                     'filename': 'elbow_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop',
+                    'url': 'https://www.nyp.org/graphics/emergency/reading-images/radialheadfracture.jpg',
                     'filename': 'elbow_fracture_1.jpg',
                     'diagnosis': 'Fracture'
                 }
             ],
             'Pelvis': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&h=500&fit=crop',
+                    'url': 'https://my.clevelandclinic.org/-/scassets/images/org/health/articles/23519-pelvis-x-ray',
                     'filename': 'pelvis_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500&h=500&fit=crop',
+                    'url': 'https://media.post.rvohealth.io/wp-content/uploads/2020/08/pelvis-x-ray_thumb.jpg',
                     'filename': 'pelvis_abnormal_1.jpg',
                     'diagnosis': 'Abnormal'
                 }
             ],
             'Abdomen': [
                 {
-                    'url': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=500&h=500&fit=crop',
+                    'url': 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Medical_X-Ray_imaging_ALP02_nevit.jpg',
                     'filename': 'abdomen_normal_1.jpg',
                     'diagnosis': 'Normal'
                 },
                 {
-                    'url': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop',
+                    'url': 'https://almostadoctor.co.uk/wp-content/uploads/2017/05/Toxic_Megacolon.jpg',
                     'filename': 'abdomen_abnormal_1.jpg',
                     'diagnosis': 'Toxic Megacolon'
                 }
@@ -528,7 +528,7 @@ class Command(BaseCommand):
         sample_images_dir = Path(__file__).parent.parent.parent.parent / 'sample_xray_images'
         sample_images_dir.mkdir(exist_ok=True)
         
-        print(f"Using verified medical image URLs")
+        print(f"Using original custom medical X-ray images")
         print(f"Total images available: {sum(len(images) for images in medical_images.values())}")
         
         return True
