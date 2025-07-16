@@ -10,6 +10,10 @@ from decouple import config
 # Setup Django environment
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'medproject.settings')
+
+# Disable Elasticsearch during build
+os.environ.setdefault('SKIP_ELASTICSEARCH', 'True')
+
 django.setup()
 
 from django.contrib.auth.models import User

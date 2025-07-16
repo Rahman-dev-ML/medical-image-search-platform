@@ -173,12 +173,14 @@ CORS_ALLOWED_ORIGINS = config(
 CORS_ALLOW_CREDENTIALS = True
 
 # Elasticsearch configuration (optional)
-ELASTICSEARCH_DSL = {
-    'default': {
-        'hosts': config('ELASTICSEARCH_URL', default='http://localhost:9200'),
-        'timeout': 20,
-    },
-}
+# Skip Elasticsearch during deployment builds
+if not config('SKIP_ELASTICSEARCH', default=False, cast=bool):
+    ELASTICSEARCH_DSL = {
+        'default': {
+            'hosts': config('ELASTICSEARCH_URL', default='http://localhost:9200'),
+            'timeout': 20,
+        },
+    }
 
 # Security settings for production
 if not DEBUG:
